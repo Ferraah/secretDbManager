@@ -1,0 +1,26 @@
+import { Grid } from "gridjs";
+
+export default function GridWrap({componentiTabella, columns}){
+
+
+  return(
+    <div>
+      <Grid
+        data={componentiTabella}
+        columns={columns}
+        search={true}
+        pagination={{
+          enabled: false,
+          limit: 10,
+        }}
+        style={
+          {
+            table:{
+              width: "100%"
+            }
+          }
+        }
+      />
+    </div>
+  )
+}
