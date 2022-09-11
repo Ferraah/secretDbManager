@@ -22,18 +22,42 @@ function convertEntriesToClientFormat(objs){
 
   var newObjs = [];
   
-  objs.forEach(tmp => {
+  if(objs){
+    objs.forEach(tmp => {
 
-    newObjs.push(
-      {
-        idLista: tmp.fk_idLista,
-        uomini: tmp.Uomini,
-        donne: tmp.Donne
-      }
-    )
-  });
+      newObjs.push(
+        {
+          idLista: tmp.fk_idLista,
+          uomini: tmp.Uomini,
+          donne: tmp.Donne
+        }
+      )
+    });
+  }
 
   return newObjs;
 }
 
-module.exports = { generateTestIngressi, convertEntriesToClientFormat };
+function convertEntriesToSheetsFormat(objs){
+  var newObjs = [];
+  
+  newObjs.push(["Nome Lista", "Pr di riferimento", "Uomini", "Donne"]);
+
+  if(objs){
+    objs.forEach(tmp => {
+
+      newObjs.push(
+        [
+          tmp.NomeLista,
+          tmp.PrLista,
+          tmp.Uomini,
+          tmp.Donne
+        ]
+      )
+    });
+  }
+
+  return newObjs;
+}
+
+module.exports = { generateTestIngressi, convertEntriesToClientFormat, convertEntriesToSheetsFormat };

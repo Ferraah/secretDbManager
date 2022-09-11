@@ -1,5 +1,5 @@
-export const UOMO = "uomini";
-export const DONNA = "donne";
+export const UOMO = "Uomini";
+export const DONNA = "Donne";
 export const NUMERORIGHE = 2;
 export const CHIUSO = 1;
 export const APERTO = 0;

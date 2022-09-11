@@ -4,8 +4,8 @@ const app = express();
 //const mysql = require('mysql');
 const cors = require('cors');
 var syncSql = require('sync-sql');
-const { generateTestIngressi, convertEntriesToClientFormat } = require('./helper');
-const {sheetsRead} = require("./googleSheet");
+const { generateTestIngressi, convertEntriesToClientFormat, convertEntriesToSheetsFormat } = require('./helper');
+const {sheetsRead, create, addSheet, writeData} = require("./googleSheet");
 
 
 app.use(cors());
@@ -45,6 +45,16 @@ function getLists(){
     }
 }
 
+function retrieveSessionDataOld(idSession){
+    let tmp = syncSql.mysql(connection, `SELECT * FROM Ingressi WHERE (fk_idSessione = ${idSession})`).data.rows;
+    return tmp;
+}
+
+function retrieveSessionData(idSession){
+    let tmp = syncSql.mysql(connection, `SELECT idLista, NomeLista, PrLista, Uomini, Donne FROM Ingressi JOIN Liste ON Liste.idLista = fk_idLista WHERE (fk_idSessione = ${idSession})`).data.rows;
+    return tmp;
+}
+
 function initializeData(sessionId){
     const entries = generateTestIngressi(getLists());
 
@@ -68,22 +78,48 @@ app.post('/getSession', async  (req, res) => {
 });
 
 app.post('/getSessionData', async  (req, res) => {
-    let idSession = req.body.idSession;
-    let tmp = syncSql.mysql(connection, `SELECT * FROM Ingressi WHERE (fk_idSessione = ${idSession})`).data.rows;
+    let idSession = req.body.idSession; 
+    let tmp = retrieveSessionData(idSession);
+    //TODO: DATA DINAMICA
+    //writeData("2022-09-11", convertEntriesToSheetsFormat(tmp));
+    res.send(tmp);
+
+});
+
+app.post('/uploadOnGoogleSheets', async  (req, res) => {
+
+    if(!req.body.session){
+        res.send({
+            success: 0,
+            message: "Request body is empty"
+        })
+
+
+        return;
+    }
     
-    
-    res.send(convertEntriesToClientFormat(tmp));
+    let idSession = req.body.session.idSession; 
+    let date = req.body.session.date;
+    let tmp = retrieveSessionData(idSession);
+
+    addSheet(date);
+    writeData(date, convertEntriesToSheetsFormat(tmp));
+    res.send(tmp);
 
 });
 
 app.post('/setSessionStatus', async (req, res) => {
 
-    if(!req.body){
+    if(!req.body.session){
         res.send({
             success: 0,
             message: "Request body is empty"
         })
+
+
+        return;
     }
+
 
     const date = req.body.session.date.replaceAll('/', '-');
     const status = req.body.status;
@@ -107,6 +143,9 @@ app.post('/setSessionStatus', async (req, res) => {
         if(queryStatus.success){
             sessionId = getSessionId(date);
             initializeData(sessionId);
+            
+            // Sheets Api
+            addSheet(date);
             console.log("+++ "+"DATA INITIALIZED FOR NEW SESSION: "+date+ " +++");
             res.send({
                 success: 1,
@@ -134,16 +173,18 @@ app.put('/updateSessionData', function (req, res) {
             success: 0,
             message: "Request body is empty"
         })
-    }
 
+        return;
+    }
     const date = req.body.session.date.replaceAll('/', '-');
     const newData = req.body.data;
     const idSessione = getSessionId(date);
+    //console.log(newData)
 
     if(idSessione!= -1){
         newData.forEach(entry => {
-            syncSql.mysql(connection, `UPDATE Ingressi SET Uomini = ${entry.uomini} WHERE (fk_idLista = ${entry.idLista} AND fk_idSessione = ${idSessione})`);
-            syncSql.mysql(connection, `UPDATE Ingressi SET Donne = ${entry.donne} WHERE (fk_idLista = ${entry.idLista} AND fk_idSessione = ${idSessione})`);
+            syncSql.mysql(connection, `UPDATE Ingressi SET Uomini = ${entry.Uomini} WHERE (fk_idLista = ${entry.idLista} AND fk_idSessione = ${idSessione})`);
+            syncSql.mysql(connection, `UPDATE Ingressi SET Donne = ${entry.Donne} WHERE (fk_idLista = ${entry.idLista} AND fk_idSessione = ${idSessione})`);
     
         });
 
@@ -170,10 +211,11 @@ app.get('/getLists', function (req, res) {
 });
 
 
-app.listen(3002, ()=>{
+app.listen(3001, ()=>{
     console.log("Connesso");
 })
 
 
 // Testing google sheets api
-sheetsRead();
+//sheetsRead();
+//writeData("2022-09-11", {});

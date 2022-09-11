@@ -1,5 +1,5 @@
 import Axios from 'axios'
-const serverLink = 'http://localhost:3002';
+const serverLink = 'http://localhost:3001';
 
 // Set to open or close the session identified by a certain date
 export async function API_setSessionStatus(session, status){
@@ -21,6 +21,13 @@ export async function API_getSession(date){
     //console.log(tmp)
 }
 
+
+export async function API_uploadOnGoogleSheets(session){
+    //console.log(date);
+    
+    let tmp = await Axios.post(serverLink+'/uploadOnGoogleSheets', {session: session});
+    //console.log(tmp)
+}
 
 // Get every list object
 export async function API_getLists(){

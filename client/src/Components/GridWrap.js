@@ -1,12 +1,13 @@
-import { Grid } from "gridjs";
+import { Grid } from "gridjs-react";
+import React from "react";
+function GridWrap({ tableComponents, columns }) {
 
-export default function GridWrap({componentiTabella, columns}){
 
-
-  return(
-    <div>
+  return (
+    (
+      <div>
       <Grid
-        data={componentiTabella}
+        data={tableComponents}
         columns={columns}
         search={true}
         pagination={{
@@ -15,12 +16,16 @@ export default function GridWrap({componentiTabella, columns}){
         }}
         style={
           {
-            table:{
+            table: {
               width: "100%"
             }
           }
         }
       />
-    </div>
+      </div>
+
+    )
   )
 }
+
+export default GridWrap

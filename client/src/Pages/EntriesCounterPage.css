@@ -1,0 +1,39 @@
+.App {
+  display: flex;
+  justify-content: center;
+  flex:1;
+  font-family: 'DM Sans', sans-serif;
+}
+
+.container{
+  width: 50%;
+  display: flex;
+  justify-content: start;
+  flex-direction: column;
+  align-items: center;
+}
+
+.grid{
+  border-radius: 1;
+  border-color: blue;
+}
+
+.header{
+  display: flex;
+  height: 20%;
+  width: 100%;
+  
+
+}
+
+.logo{
+  height: 100%;
+}
+
+.title{
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  justify-content: center;
+  text-align: center;
+}

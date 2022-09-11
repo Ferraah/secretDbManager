@@ -51,24 +51,25 @@ export function getFormattedDate(date){
 }
 
 // OTTIMIZZARE
-export function generateRows(liste, ingressi, store, onChange){
+export function generateRows(data, store, currentSession){
 
   var rows = [];
-  liste.forEach(lista => {
+  var index = 0;
+  data.forEach(lista => {
       // Trova l'indice dei dati associati agli ingressi e alla lista
-      let index = findById(ingressi, lista.idLista);
 
       rows.push(
         {
           idLista: lista.idLista,
-          nomeLista: lista.NomeLista, 
-          prLista: lista.PrLista, 
-          uominiCounter: _(<Provider store={store}><CustomCounter valoreIniziale={ingressi[index].uomini} ingressi={ingressi} idLista={index} sesso={UOMO} onChange={onChange} /></Provider>),
-          donneCounter: _(<Provider store={store}><CustomCounter valoreIniziale={ingressi[index].donne} ingressi={ingressi} idLista={index} sesso={DONNA} onChange={onChange}/></Provider>)
+          NomeLista: lista.NomeLista, 
+          PrLista: lista.PrLista, 
+          uominiCounter: _(<Provider store={store}><CustomCounter currentSession={currentSession} index={index} valoreIniziale={lista.Uomini} ingressi={data} sesso={UOMO}  /></Provider>),
+          donneCounter: _(<Provider store={store}><CustomCounter currentSession={currentSession} index={index} valoreIniziale={lista.Donne} ingressi={data}  sesso={DONNA} /></Provider>)
         }
   
       )
-
+      
+      index+=1;
 
   });
 
