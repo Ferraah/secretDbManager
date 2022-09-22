@@ -4,6 +4,7 @@ import { Provider } from "react-redux";
 import { _ } from "gridjs-react";
 
 import {UOMO, DONNA} from '../costants';
+import { API_getLists, API_deleteList } from '../ApiCalls/apiCalls';
 
 
 
@@ -27,15 +28,6 @@ export function useInterval(callback, delay) {
   }, [delay]);
 }
 
-// Trova l'indice dei dati associati agli ingressi e alla lista
-export function findById(source, id) {
-    for (var i = 0; i < source.length; i++) {
-      if (source[i]['idLista'] === id) {
-        return i;
-      }
-    }
-    throw "Couldn't find object with id: " + id;
-  }
 
 export function getFormattedDate(date){
 
@@ -50,13 +42,11 @@ export function getFormattedDate(date){
   
 }
 
-// OTTIMIZZARE
-export function generateRows(data, store, currentSession){
+export function generateCountersRows(data, store, currentSession){
 
   var rows = [];
   var index = 0;
   data.forEach(lista => {
-      // Trova l'indice dei dati associati agli ingressi e alla lista
 
       rows.push(
         {
@@ -76,54 +66,38 @@ export function generateRows(data, store, currentSession){
   return rows;
 }
 
-export function generateTestRows(max, store, ingressi){
+// 
+export async function generateListsRows(forceUpdate){
+
+  // Fetching every list
+  const data = await API_getLists();
 
   var rows = [];
-  for (let index = 0; index < max; index++) {
-    
-    rows.push(
-      {
-        idLista: index,
-        nomeLista: makeid(4), 
-        prLista: makeid(4), 
-        uominiCounter: _(<Provider store={store}><CustomCounter ingressi={ingressi} idLista={index} sesso={UOMO} /></Provider>),
-        donneCounter: _(<Provider store={store}><CustomCounter ingressi={ingressi} idLista={index} sesso={DONNA} /></Provider>)}
+  var index = 0;
 
-    )
-    
-  }
+  // Make a row components for each of the lists.
+  data.forEach(lista => {
+
+      rows.push(
+        {
+          idLista: lista.idLista,
+          NomeLista: lista.NomeLista, 
+          PrLista: lista.PrLista,
+          Visibile: lista.Visibile ? "Sì" : "No", 
+          deleteButton: _(<button onClick={async () => {
+
+            await API_deleteList(lista.idLista);
+            forceUpdate();
+            
+          }}>Elimina</button>)
+        }
+  
+      )
+      
+      index+=1;
+
+  });
 
   return rows;
 }
 
-export function generateTestIngressi(max){
-
-  var rows = [];
-  for (let index = 0; index < max; index++) {
-    
-    rows.push(
-      {
-        idLista: index,
-        uomini: 0,
-        donne: 0
-      }
-
-    )
-    
-  }
-
-  return rows;
-}
-
-
-function makeid(length) {
-    var result           = '';
-    var characters       = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-    var charactersLength = characters.length;
-
-    for ( var i = 0; i < length; i++ ) {
-      result += characters.charAt(Math.floor(Math.random() * charactersLength));
-    }
-    
-  return result;
-}

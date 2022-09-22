@@ -22,6 +22,7 @@ export async function API_getSession(date){
 }
 
 
+
 export async function API_uploadOnGoogleSheets(session){
     //console.log(date);
     
@@ -42,8 +43,31 @@ export async function API_getSessionData(session){
 
 }
 
+// Delete a List ( making it not visible )
+export async function API_deleteList(idList){
+    let res = await Axios.post(serverLink+'/deleteList', {idList:idList});
+    return res.data;
+}
+
+// Add a new list 
+export async function API_insertNewList(listName, prName){
+    
+    let res = await Axios.post(serverLink+'/insertNewList', {listName: listName, prName: prName});
+    return res.data;
+    //console.log(tmp)
+}
+
+
 // Update the current session data
 export async function API_updateSessionData(session, newData){
     Axios.put(serverLink+'/updateSessionData', {session: session, data: newData}).then( (res) => {
     });
+}
+
+// Update the current session data
+export async function API_resetSession(session){
+    let res = await Axios.put(serverLink+'/resetSession', {session: session});
+    console.log(res.data);
+    return res.data;
+
 }

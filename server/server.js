@@ -5,7 +5,8 @@ const app = express();
 const cors = require('cors');
 var syncSql = require('sync-sql');
 const { generateTestIngressi, convertEntriesToClientFormat, convertEntriesToSheetsFormat } = require('./helper');
-const {sheetsRead, create, addSheet, writeData} = require("./googleSheet");
+const {GS_sheetsRead, GS_create, GS_addSheet, GS_writeData} = require("./googleSheet");
+const { query } = require('express');
 
 
 app.use(cors());
@@ -36,7 +37,7 @@ function getSessionId(date, next){
 }
 
 function getLists(){
-    let res =  syncSql.mysql(connection, "SELECT * FROM Liste");
+    let res =  syncSql.mysql(connection, "SELECT * FROM Liste ");
     if(res.success){
         return res.data.rows;
     }
@@ -45,13 +46,15 @@ function getLists(){
     }
 }
 
+// Depercated
 function retrieveSessionDataOld(idSession){
     let tmp = syncSql.mysql(connection, `SELECT * FROM Ingressi WHERE (fk_idSessione = ${idSession})`).data.rows;
     return tmp;
 }
 
 function retrieveSessionData(idSession){
-    let tmp = syncSql.mysql(connection, `SELECT idLista, NomeLista, PrLista, Uomini, Donne FROM Ingressi JOIN Liste ON Liste.idLista = fk_idLista WHERE (fk_idSessione = ${idSession})`).data.rows;
+    // Retrieve visible data
+    let tmp = syncSql.mysql(connection, `SELECT idLista, NomeLista, PrLista, Uomini, Donne FROM Ingressi JOIN Liste ON Liste.idLista = fk_idLista AND Liste.Visibile = 1 WHERE (fk_idSessione = ${idSession})`).data.rows;
     return tmp;
 }
 
@@ -76,6 +79,76 @@ app.post('/getSession', async  (req, res) => {
     })
 
 });
+
+app.post('/deleteList', async  (req, res) => {
+
+
+    console.log(req.body);
+
+    if(req.body.idList === undefined){
+        res.send({
+            success: 0,
+            message: "Request body is empty"
+        })
+        return;
+    }
+
+
+    const idList = req.body.idList;
+    const query = `UPDATE Liste SET Visibile = 0 WHERE (idLista = ${idList});`;
+    let queryStatus = syncSql.mysql(connection,query);
+
+    if(queryStatus.success){
+        res.status(200).json({
+            success: 1, 
+            message: "Lists Updated"
+        })
+        return;
+    }else{
+        res.status(500).json({
+            success: 0, 
+            message: "Error, lists not updated"
+        })
+        return;
+    }
+});
+
+app.post('/insertNewList', async  (req, res) => {
+
+
+    console.log(req.body);
+
+    if(req.body.listName === undefined || req.body.prName  === undefined){
+        res.send({
+            success: 0,
+            message: "Request body is not correct"
+        })
+        return;
+    }
+
+
+    const listName = req.body.listName;
+    const prName = req.body.prName;
+
+    const query = `INSERT INTO Liste (NomeLista, PrLista, Visibile) VALUES ('${listName}', '${prName}', 1)`
+    let queryStatus = syncSql.mysql(connection,query);
+    console.log(queryStatus);
+    if(queryStatus.success){
+        res.status(200).json({
+            success: 1, 
+            message: "Lists Updated"
+        })
+        return;
+    }else{
+        res.status(500).json({
+            success: 0, 
+            message: "Error, lists not updated"
+        })
+        return;
+    }
+});
+
+
 
 app.post('/getSessionData', async  (req, res) => {
     let idSession = req.body.idSession; 
@@ -102,8 +175,9 @@ app.post('/uploadOnGoogleSheets', async  (req, res) => {
     let date = req.body.session.date;
     let tmp = retrieveSessionData(idSession);
 
-    addSheet(date);
-    writeData(date, convertEntriesToSheetsFormat(tmp));
+    GS_addSheet(date);
+    
+    GS_writeData(date, convertEntriesToSheetsFormat(tmp));
     res.send(tmp);
 
 });
@@ -135,6 +209,7 @@ app.post('/setSessionStatus', async (req, res) => {
                 success: 1, 
                 message: "Session updated"
             })
+
             return;
         }
 
@@ -145,7 +220,7 @@ app.post('/setSessionStatus', async (req, res) => {
             initializeData(sessionId);
             
             // Sheets Api
-            addSheet(date);
+            GS_addSheet(date);
             console.log("+++ "+"DATA INITIALIZED FOR NEW SESSION: "+date+ " +++");
             res.send({
                 success: 1,
@@ -197,6 +272,57 @@ app.put('/updateSessionData', function (req, res) {
     }
     else{
         print("ATTEMPTED TO UPDATE NON-EXISTING DATA FOR SESSION "+JSON.stringify(date));
+        res.send({
+            success: 0,
+            message: "Attempted to update data for a non-existing session"
+        })
+    }
+
+});
+
+app.put('/resetSession', function (req, res) {
+
+    if(!req.body){
+        res.send({
+            success: 0,
+            message: "Request body is empty"
+        })
+
+        return;
+    }
+
+    const date = req.body.session.date.replaceAll('/', '-');
+    const idSessione = getSessionId(date);
+
+    if(idSessione!= -1){
+
+        // Deleting data and starting a new session
+        var queryStr = `DELETE FROM Ingressi WHERE fk_idSessione=${idSessione};`
+        var queryRes = syncSql.mysql(connection, queryStr);
+        console.log(queryRes.success)
+
+        queryStr= `DELETE FROM Sessioni WHERE idSessione=${idSessione};`;
+        queryRes = syncSql.mysql(connection, queryStr);
+        console.log(queryRes.success)
+
+        queryStr= `INSERT INTO Sessioni (Data, Chiusa) VALUES ('${date}', '0');`;
+        queryRes = syncSql.mysql(connection, queryStr);
+        console.log(queryRes.success)
+
+        
+        // Initializing data
+        const newIdSessione = getSessionId(date);
+        initializeData(newIdSessione);
+
+        res.send({
+            success: 1,
+            message: "Session reset"
+        })
+
+        print("SESSION RESET "+date);
+    }
+    else{
+        print("ATTEMPTED TO RESET NON-EXISTING SESSION "+JSON.stringify(date));
         res.send({
             success: 0,
             message: "Attempted to update data for a non-existing session"

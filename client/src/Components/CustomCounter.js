@@ -7,16 +7,12 @@ import { API_uploadOnGoogleSheets, API_updateSessionData } from '../ApiCalls/api
 export default function CustomCounter({index, sesso, ingressi, valoreIniziale, currentSession}){
 
   const [value, setValue] = useState(valoreIniziale);
-  
+  const [intervalId, setIntervalId] = useState();
   const dispatch = useDispatch();
   
 
-  const modificaContatore = ((index, sesso, nuovoValore) => {
-    
-    //console.log(ingressi);
-    //console.log(idLista);
-    //console.log(tmp);
-    //console.log(ingressi);
+  const intervalHandler = (nuovoValore) => {
+
     var tmp = [...ingressi];
     tmp[index][sesso] = nuovoValore;
     dispatch(updateDatiTabella(tmp));
@@ -24,6 +20,23 @@ export default function CustomCounter({index, sesso, ingressi, valoreIniziale, c
     //SEND DATA TO API
     API_updateSessionData(currentSession, tmp);
     API_uploadOnGoogleSheets(currentSession)
+
+  }
+
+  const modificaContatore = ((index, sesso, nuovoValore) => {
+    
+
+    // Sending new data only after last click
+    if(intervalId)
+      clearTimeout(intervalId);
+
+    var id = setTimeout(() => intervalHandler(nuovoValore), 1000);
+    setIntervalId(id);
+
+
+
+
+
 
     
   });

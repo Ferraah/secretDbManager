@@ -1,7 +1,6 @@
 import { Grid } from "gridjs-react";
 import React from "react";
-function GridWrap({ tableComponents, columns }) {
-
+const GridWrap = React.memo(({ tableComponents, columns }) => {
 
   return (
     (
@@ -26,6 +25,30 @@ function GridWrap({ tableComponents, columns }) {
 
     )
   )
-}
+})
 
-export default GridWrap
+const TestMessage = React.memo(()=>{
+  console.log("Render")
+  return(
+    <Grid
+    data={[
+      ['John', 'john@example.com'],
+      ['Mike', 'mike@gmail.com']
+    ]}
+    columns={['Name', 'Email']}
+    search={true}
+    pagination={{
+      enabled: false,
+      limit: 10,
+    }}
+    style={
+      {
+        table: {
+          width: "100%"
+        }
+      }
+    }
+  />
+  )
+})
+export {GridWrap, TestMessage};

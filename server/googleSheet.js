@@ -12,7 +12,7 @@ const spreadsheetId = "1N9ta1K8nBWWzg0oNMrwjs8-Si8twvLEGuwz_A8F7gvM";
 
 
 
-async function sheetsRead(){
+async function GS_sheetsRead(){
     
 
     //Auth client Object
@@ -31,7 +31,7 @@ async function sheetsRead(){
 }
 
 
-async function create(title) {
+async function GS_create(title) {
 
   
       //Auth client Object
@@ -57,7 +57,8 @@ async function create(title) {
     }
 }
 
-async function writeData(sheetName, data){
+// TODO: Cancellare dati precedenti alla scrittura e fare meno scritture
+async function GS_writeData(sheetName, data){
 
   const authClientObject = await auth.getClient();
 
@@ -83,7 +84,7 @@ async function writeData(sheetName, data){
 
 }
 
-async function addSheet(title){
+async function GS_addSheet(title){
   const authClientObject = await auth.getClient();
 
   const service = google.sheets({ version: "v4", auth: authClientObject });
@@ -126,4 +127,4 @@ async function addSheet(title){
 */
 
 
-module.exports = {sheetsRead, create, addSheet, writeData};
+module.exports = {GS_sheetsRead, GS_create, GS_addSheet, GS_writeData};
